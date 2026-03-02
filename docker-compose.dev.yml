@@ -1,0 +1,94 @@
+services:
+  db:
+    image: postgis/postgis:16-3.5
+    container_name: proximite-db
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-proximite}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-proximite}
+      POSTGRES_DB: ${POSTGRES_DB:-proximite}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - proximite-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-proximite} -d ${POSTGRES_DB:-proximite}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  adminer:
+    image: adminer:latest
+    container_name: proximite-adminer
+    ports:
+      - "5050:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - proximite-net
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile.dev
+    container_name: proximite-api-dev
+    ports:
+      - "3001:3001"
+    environment:
+      NODE_ENV: development
+      PORT: "3001"
+      DATABASE_URL: postgres://${POSTGRES_USER:-proximite}:${POSTGRES_PASSWORD:-proximite}@db:5432/${POSTGRES_DB:-proximite}
+    volumes:
+      - .:/app
+      - api_node_modules:/app/node_modules
+      - shared_pkg_nm:/app/packages/shared/node_modules
+      - ui_pkg_nm:/app/packages/ui/node_modules
+      - eslint_config_pkg_nm:/app/packages/eslint-config/node_modules
+      - typescript_config_pkg_nm:/app/packages/typescript-config/node_modules
+      - api_app_nm:/app/apps/api/node_modules
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - proximite-net
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile.dev
+    container_name: proximite-web-dev
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: development
+      NEXT_TELEMETRY_DISABLED: "1"
+      API_URL: "http://api:3001"
+    volumes:
+      - .:/app
+      - web_node_modules:/app/node_modules
+      - shared_pkg_nm:/app/packages/shared/node_modules
+      - ui_pkg_nm:/app/packages/ui/node_modules
+      - eslint_config_pkg_nm:/app/packages/eslint-config/node_modules
+      - typescript_config_pkg_nm:/app/packages/typescript-config/node_modules
+      - web_app_nm:/app/apps/web/node_modules
+    depends_on:
+      - api
+    networks:
+      - proximite-net
+
+networks:
+  proximite-net:
+    driver: bridge
+
+volumes:
+  db-data:
+  api_node_modules:
+  web_node_modules:
+  shared_pkg_nm:
+  ui_pkg_nm:
+  eslint_config_pkg_nm:
+  typescript_config_pkg_nm:
+  api_app_nm:
+  web_app_nm:
