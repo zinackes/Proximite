@@ -36,6 +36,8 @@ services:
   adminer:
     image: adminer:latest
     container_name: proximite-adminer
+    environment:
+      ADMINER_DESIGN: lavender-light
     ports:
       - "5050:8080"
     depends_on:
