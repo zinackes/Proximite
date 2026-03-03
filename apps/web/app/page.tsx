@@ -1,6 +1,7 @@
 import Image, { type ImageProps } from "next/image";
 import styles from "./page.module.css";
 import { Button } from "@repo/ui/components/ui/button";
+import React from "react";
 
 type Props = Omit<ImageProps, "src"> & {
   srcLight: string;
@@ -31,7 +32,7 @@ export default function Home() {
           height={38}
           priority
         />
-        <Button>Click me</Button>
+        <Button variant={"outline"}>Clique ici</Button>
         <ol>
           <li>
             Get started by editing <code>apps/web/app/page.tsx</code>
