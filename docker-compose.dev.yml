@@ -40,6 +40,8 @@ services:
       NODE_ENV: development
       PORT: "3001"
       DATABASE_URL: postgres://${POSTGRES_USER:-proximite}:${POSTGRES_PASSWORD:-proximite}@db:5432/${POSTGRES_DB:-proximite}
+      CHOKIDAR_USEPOLLING: "1"
+      WATCHPACK_POLLING: "true"
     volumes:
       - .:/app
       - api_node_modules:/app/node_modules
