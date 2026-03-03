@@ -33,7 +33,7 @@ export default function Home() {
           priority
         />
         <Button variant={"outline"}>Clique ici</Button>
-        <ol>
+        <ol className="flex">
           <li>
             Get started by editing <code>apps/web/app/page.tsx</code>
           </li>
