@@ -51,12 +51,14 @@ services:
           memory: 64m
           cpus: "0.1"
 
-  
   redis:
     image: redis:7-alpine
     container_name: proximite-redis
+    command: redis-server --appendonly yes
     ports:
       - "6379:6379"
+    volumes:
+      - redis-data:/data
     networks:
       - proximite-net
     healthcheck:
@@ -64,6 +66,24 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 64m
+          cpus: "0.1"
+
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: proximite-redis-commander
+    environment:
+      REDIS_HOSTS: local:redis:6379
+    ports:
+      - "8081:8081"
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - proximite-net
     deploy:
       resources:
         limits:

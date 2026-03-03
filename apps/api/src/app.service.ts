@@ -14,7 +14,7 @@ export class AppService {
       return cached;
     }
 
-    await this.cache.set("test", "Hello World !", 30000);
+    await this.cache.set("test", "Hello World !", 300000);
     return 'Hello World!';
   }
 
