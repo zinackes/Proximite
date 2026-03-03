@@ -48,6 +48,24 @@ services:
           memory: 64m
           cpus: "0.1"
 
+  redis:
+    image: redis:7-alpine
+    container_name: proximite-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - proximite-net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 64m
+          cpus: "0.1"
+
   api:
     build:
       context: .
@@ -59,6 +77,8 @@ services:
       NODE_ENV: development
       PORT: "3001"
       DATABASE_URL: postgres://${POSTGRES_USER:-proximite}:${POSTGRES_PASSWORD:-proximite}@db:5432/${POSTGRES_DB:-proximite}
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
       CHOKIDAR_USEPOLLING: "1"
       WATCHPACK_POLLING: "true"
       NODE_OPTIONS: "--max-old-space-size=512"
@@ -72,6 +92,8 @@ services:
       - api_app_nm:/app/apps/api/node_modules
     depends_on:
       db:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     networks:
       - proximite-net
@@ -120,6 +142,7 @@ networks:
 
 volumes:
   db-data:
+  redis-data:
   api_node_modules:
   web_node_modules:
   shared_pkg_nm:
