@@ -6,6 +6,16 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-proximite}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-proximite}
       POSTGRES_DB: ${POSTGRES_DB:-proximite}
+    # Tuning pour petits déploiements (défauts PostgreSQL prévus pour gros serveurs)
+    command: >
+      postgres
+      -c shared_buffers=64MB
+      -c max_connections=25
+      -c work_mem=4MB
+      -c maintenance_work_mem=32MB
+      -c effective_cache_size=128MB
+      -c wal_buffers=4MB
+      -c checkpoint_completion_target=0.9
     volumes:
       - db-data:/var/lib/postgresql/data
     ports:
@@ -17,6 +27,13 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 256m
+          cpus: "0.5"
+        reservations:
+          memory: 64m
 
   api:
     build:
@@ -30,6 +47,7 @@ services:
       NODE_ENV: production
       PORT: "3001"
       DATABASE_URL: postgres://${POSTGRES_USER:-proximite}:${POSTGRES_PASSWORD:-proximite}@db:5432/${POSTGRES_DB:-proximite}
+      NODE_OPTIONS: "--max-old-space-size=192"
     depends_on:
       db:
         condition: service_healthy
@@ -41,6 +59,13 @@ services:
       start_period: 10s
     networks:
       - proximite-net
+    deploy:
+      resources:
+        limits:
+          memory: 256m
+          cpus: "0.5"
+        reservations:
+          memory: 64m
 
   adminer:
     image: adminer:latest
@@ -52,6 +77,11 @@ services:
         condition: service_healthy
     networks:
       - proximite-net
+    deploy:
+      resources:
+        limits:
+          memory: 64m
+          cpus: "0.1"
 
   web:
     build:
@@ -65,11 +95,19 @@ services:
       NODE_ENV: production
       NEXT_TELEMETRY_DISABLED: "1"
       API_URL: "http://api:3001"
+      NODE_OPTIONS: "--max-old-space-size=96"
     depends_on:
       api:
         condition: service_healthy
     networks:
       - proximite-net
+    deploy:
+      resources:
+        limits:
+          memory: 128m
+          cpus: "0.5"
+        reservations:
+          memory: 32m
 
 networks:
   proximite-net:
