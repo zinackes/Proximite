@@ -1,18 +1,18 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { cleanupOpenApiDoc } from 'nestjs-zod';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     bodyParser: false
   });
 
-  const config = new DocumentBuilder()
+  const config = SwaggerModule.createDocument(app,new DocumentBuilder()
     .setTitle('Proximité')
-    .build();
+    .build());
 
-  const documentFactory = () => SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api/swagger', app, documentFactory);
+  SwaggerModule.setup('api/swagger', app, cleanupOpenApiDoc(config));
 
   app.enableCors({
     origin: "*",

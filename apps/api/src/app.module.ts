@@ -9,6 +9,8 @@ import { UsersModule } from './users/users.module';
 import { CacheModule } from '@nestjs/cache-manager';
 import KeyvRedis from '@keyv/redis';
 import { BullModule } from '@nestjs/bullmq';
+import { APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
+import { ZodValidationPipe, ZodSerializerInterceptor } from 'nestjs-zod';
 
 @Module({
   imports: [
@@ -50,6 +52,15 @@ import { BullModule } from '@nestjs/bullmq';
     UsersModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService,
+    {
+      provide: APP_PIPE,
+      useClass: ZodValidationPipe
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: ZodSerializerInterceptor 
+    }
+  ],
 })
 export class AppModule {}
